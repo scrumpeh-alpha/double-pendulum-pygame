@@ -1,21 +1,106 @@
 {
-    "horizontal_slider":
+    "default": 
     {
-        
-    }
-    "button":
+        "font": 
+        {
+            "name": "default_font",
+            "size": 24,
+            "regular_path": "assets/fonts/PT_Mono/PTMono-Regular.ttf"
+        }
+    },
+    "text_entry_line": 
     {
         "colours":
         {
-            "normal_border": "White",
-            "normal_bg": "SlateGray",
-            "normal_text": "White"
+            "dark_bg": "black",
+            "selected_bg": "red",
+            "normal_text": "white",
+            "selected_text": "black",
+            "normal_border": "white",
+            "text_cursor": "red"
+        },
+        "font": 
+        {
+            "name": "default_font",
+            "size": 24,
+            "regular_path": "assets/fonts/PT_Mono/PTMono-Regular.ttf"
+        }
+    },
+    "label":
+    {
+        "colours":
+        {
+            "normal_text": "white"
+        },
+        "font": 
+        {
+            "name": "default_font",
+            "size": 24,
+            "regular_path": "assets/fonts/PT_Mono/PTMono-Regular.ttf"
+        },
+        "misc":
+        {
+            "text_horiz_alignment": "left"
+        }
+    },
+    "horizontal_slider":
+    {
+        "colours":
+        {
+            "dark_bg": "#15191e,#252525,0",
+            "normal_border": "#ffffff"
+        },
+        "misc":
+        {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10",
+            "enable_arrow_buttons": "0",
+            "sliding_button_width": "45"
+        }
+    },
+    "horizontal_slider.#sliding_button":
+    {
+        "colours":
+        {
+            "normal_bg": "#bb0000",
+            "hovered_bg": "#ff0000",
+            "active_bg": "#ff0000",
+            "normal_border": "#202020"
         },
         "misc":
         {
             "shape": "rounded_rectangle",
             "shape_corner_radius": "10",
             "border_width": "2"
+        }
+    },
+    "button":
+    {
+        "colours":
+        {
+            "normal_border": "White",
+            "normal_bg": "#000000",
+            "normal_text": "White",
+            "hovered_border": "red",
+            "hovered_bg": "#000000",
+            "hovered_text": "red",
+            "selected_border": "red",
+            "active_bg": "red",
+            "active_text": "black"
+        },
+        "font": 
+        {
+            "name": "default_font",
+            "size": 24,
+            "regular_path": "assets/fonts/PT_Mono/PTMono-Regular.ttf"
+        }
+    },
+    "panel":
+    {
+        "colours":
+        {
+            "dark_bg": "#000000",
+            "normal_border": "#252525"
         }
     }
  }
