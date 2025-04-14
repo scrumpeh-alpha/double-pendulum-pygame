@@ -26,7 +26,7 @@ To solve the system of differential equations:
 \end{align*}
 ```
 
-Consider a state vector $\mathbf Y$ where $\mathbf Y = [\theta_1,\, \theta_2,\, \omega_1,\, \omega_2]$.
+Consider a state vector $\mathbf Y$ where $\mathbf Y = [\theta_1, \theta_2, \omega_1, \omega_2]$.
 
 Let
 ```math
