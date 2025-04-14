@@ -15,6 +15,7 @@
 ### Installation & Running
 
 - Create python environment and activate virtual environment
+
 On Linux:
 ```bash
 python -m venv venv
@@ -25,6 +26,7 @@ On windows:
 python -m venv venv
 .\venv\Scripts\activate
 ```
+
 - Install required packages
 ```bash
 pip install -r requirements.txt
