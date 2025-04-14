@@ -1,5 +1,6 @@
 import pygame
 import pygame_gui
+import time
 from double_pendulum import DoublePendulum
 
 # TODO: 
@@ -145,11 +146,14 @@ while running:
 
     screen.fill("black")
 
-    try:
-        pendulum.update(screen)
-    except OverflowError as e:
-        running = False
-        print(e)
+    pendulum.update_traces(screen)
+    for _ in range(10):
+        try:
+            pendulum.rk4_step()
+        except OverflowError as e:
+            running = False
+            print(e)
+    pendulum.update(screen)
     mouse_vel = pygame.mouse.get_rel()
 
     if pendulum.held > 0:
@@ -161,6 +165,7 @@ while running:
     manager.draw_ui(screen)
 
     pygame.display.update()
-    dt = clock.tick(FPS)/1000
+    dt = clock.tick(FPS)/1000.0
+    time.sleep(0.001)
 
 pygame.quit()

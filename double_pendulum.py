@@ -1,6 +1,8 @@
 import pygame
 import numpy as np
 from numpy import sin, cos
+from numpy.typing import NDArray
+from collections.abc import Callable
 from collections import deque
 
 
@@ -31,8 +33,8 @@ class Trace():
 
 class DoublePendulum():
     def __init__(self, angles: tuple[float, float], colors: tuple[tuple, tuple], lengths: tuple[float, float], masses: tuple[float, float], pivot: tuple[float, float]) -> None:
-        self.theta1 = angles[0]*np.pi/180
-        self.theta2 = angles[1]*np.pi/180
+        self.theta1 = np.radians(angles[0])
+        self.theta2 = np.radians(angles[1])
         self.omega1 = 0
         self.omega2 = 0
 
@@ -44,13 +46,12 @@ class DoublePendulum():
         self.m1 = masses[0]
         self.m2 = masses[1]
 
-        self.r1 = min(self.m1*1.5, 30)
-        self.r2 = min(self.m2*1.5, 30)
         self.pos1 = (0, 0)
         self.pos2 = (0, 0)
 
         self.g = 9.81
-        self.dt = 0.16
+        # self.dt = 0.16
+        self.dt = 0.016
         self.held = 0
         self.trace_capacity = 100
         self.trace2 = Trace(self.trace_capacity)
@@ -60,57 +61,61 @@ class DoublePendulum():
         self.initial_lengths = lengths
         self.initial_masses = masses
 
-    def __setattr__(self, name: str, value) -> None:
-        if name in ("m1", "m2"):
-            object.__setattr__(self, name, value)
-            object.__setattr__(self, f"r{name[1]}", min(value*1.5, 30))
-        else:
-            object.__setattr__(self, name, value)
+    @property
+    def r1(self):
+        return min(self.m1*1.5, 30)
 
-    def set_m1(self, m1: float) -> None:
-        self.m1 = m1
-        self.r1 = min(self.m1*1.5, 30)
+    @property
+    def r2(self):
+        return min(self.m2*1.5, 30)
 
-    def set_m2(self, m2: float) -> None:
-        self.m2 = m2
-        self.r2 = min(self.m2*1.5, 30)
+    @property
+    def state_vector(self):
+        return np.array([self.theta1, self.theta2, self.omega1, self.omega2])
 
-    def __phi_1(self, theta1: float, theta2: float, omega2: float, omega1: float) -> float:
-        dtheta = theta1 - theta2
-        m1, m2, L1, L2 = self.m1, self.m2, self.l1, self.l2
+    def __phi(self, state_vector: NDArray) -> NDArray:
+        m1, m2 = self.m1, self.m2
+        L1, L2 = self.l1, self.l2
         g = self.g
-        return ( -m2*(L1*omega1**2*sin(dtheta)*cos(dtheta) + L2*omega2**2*sin(dtheta)) + g*(-(m1+m2)*sin(theta1) + m2*cos(dtheta)*sin(theta2)) ) / (m1*L1 + m2*L1*sin(dtheta)**2)
-
-    def __phi_2(self, theta1: float, theta2: float, omega1: float, omega2: float) -> float:
+        theta1, theta2, omega1, omega2 = state_vector
         dtheta = theta1 - theta2
-        m1, m2, L1, L2 = self.m1, self.m2, self.l1, self.l2
-        g = self.g
-        return ( (m1+m2)*L1*omega1**2*sin(dtheta) + m2*L2*omega2**2*sin(dtheta)*cos(dtheta) + (m1+m2)*g*(sin(theta1)*cos(dtheta) - sin(theta2)) ) / (m1*L2 + m2*L2*sin(dtheta)**2)
+        Y_n = np.empty(4)
 
-    def __rk4_step(self) -> None:
+        Y_n[0] = omega1
+        Y_n[1] = omega2
+
+        # omega1
+        Y_n[2] = ( -m2*(L1*omega1**2*sin(dtheta)*cos(dtheta) + L2*omega2**2*sin(dtheta)) + g*(-(m1+m2)*sin(theta1) + m2*cos(dtheta)*sin(theta2)) ) / (m1*L1 + m2*L1*sin(dtheta)**2)
+
+        # omega2
+        Y_n[3] = ( (m1+m2)*L1*omega1**2*sin(dtheta) + m2*L2*omega2**2*sin(dtheta)*cos(dtheta) + (m1+m2)*g*(sin(theta1)*cos(dtheta) - sin(theta2)) ) / (m1*L2 + m2*L2*sin(dtheta)**2)
+
+        return Y_n
+
+    @staticmethod
+    def __rk4(Y_i, dt: float, f: Callable):
+        k1 = f(Y_i)
+        k2 = f(Y_i + dt*k1/2)
+        k3 = f(Y_i + dt*k2/2)
+        k4 = f(Y_i + dt*k3)
+        Y_n = Y_i + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+        return Y_n 
+
+    def rk4_step(self) -> None:
         if (self.theta1 > 1e6 or self.theta2 > 1e6):
             raise OverflowError
-        k1 = self.__phi_1(self.theta1, self.theta2, self.omega2, self.omega1)
-        k2 = self.__phi_1(self.theta1, self.theta2, self.omega2, self.omega1 + self.dt*k1/2)
-        k3 = self.__phi_1(self.theta1, self.theta2, self.omega2, self.omega1 + self.dt*k2/2)
-        k4 = self.__phi_1(self.theta1, self.theta2, self.omega2, self.omega1 + self.dt*k3)
-        if k1 == np.nan or k2 == np.nan or k3 == np.nan or k4 == np.nan:
-            raise OverflowError("Overflow in scalar power")
-        self.omega1 += self.dt/6 * (k1 + 2*k2 + 2*k3 + k4)
-        k1 = self.__phi_2(self.theta1, self.theta2, self.omega1, self.omega2)
-        k2 = self.__phi_2(self.theta1, self.theta2, self.omega1, self.omega2 + self.dt*k1/2)
-        k3 = self.__phi_2(self.theta1, self.theta2, self.omega1, self.omega2 + self.dt*k2/2)
-        k4 = self.__phi_2(self.theta1, self.theta2, self.omega1, self.omega2 + self.dt*k3)
-        if k1 == np.nan or k2 == np.nan or k3 == np.nan or k4 == np.nan:
-            raise OverflowError("Overflow in scalar power")
-        self.omega2 += self.dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+
+        self.theta1, self.theta2, self.omega1, self.omega2 = self.__rk4(self.state_vector, self.dt, self.__phi)
+
         # Overflow prevention
-        # self.omega1 %= 2*np.pi
-        # self.omega2 %= 2*np.pi
-        self.theta1 %= 2*np.pi
-        self.theta2 %= 2*np.pi
-        self.theta1 += (self.omega1*self.dt)
-        self.theta2 += (self.omega2*self.dt)
+        self.theta1 %= (2*np.pi)
+        self.theta2 %= (2*np.pi)
+
+    def update_traces(self, screen: pygame.Surface) -> None:
+        self.trace2.capacity = self.trace_capacity
+        self.trace2.add(self.pos2)
+        self.trace2.update_trace(screen)
+
 
     def update(self, screen: pygame.Surface) -> None:
         if self.theta1 > 1e6 or self.theta2 > 1e6:
@@ -122,9 +127,7 @@ class DoublePendulum():
         self.pos1 = (x1, y1)
         self.pos2 = (x2, y2)
 
-        self.trace2.capacity = self.trace_capacity
-        self.trace2.add(self.pos2)
-        self.trace2.update_trace(screen)
+        # self.update_traces(screen)
 
         LINE_COLOR = (150, 150, 150)
         pygame.draw.line(screen, LINE_COLOR, self.pivot, (x1, y1))
@@ -134,7 +137,7 @@ class DoublePendulum():
 
         if self.held > 0:
             return
-        self.__rk4_step()
+        # self.__rk4_step()
 
     def on_mouse_down(self) -> None:
         mouse_pos = pygame.mouse.get_pos()
@@ -198,8 +201,5 @@ class DoublePendulum():
         # self.l2 = self.initial_lengths[1]
         # self.m1 = self.initial_masses[0]
         # self.m2 = self.initial_masses[1]
-        #
-        # self.r1 = min(self.m1*1.5, 30)
-        # self.r2 = min(self.m2*1.5, 30)
 
         self.trace2.clear()
