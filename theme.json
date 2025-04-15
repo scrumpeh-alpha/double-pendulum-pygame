@@ -102,5 +102,16 @@
             "dark_bg": "#000000",
             "normal_border": "#252525"
         }
+    },
+    "#trace_toggle_button_active":
+    {
+        "colours": 
+        {
+            "normal_border": "red",
+            "normal_bg": "#000000",
+            "normal_text": "red",
+            "hovered_text": "White"
+        }
     }
+
  }

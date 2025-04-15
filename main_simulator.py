@@ -3,9 +3,6 @@ import pygame_gui
 import time
 from double_pendulum import DoublePendulum
 
-# TODO:
-# Add checkbox for enabling trace1
-
 ### MAIN PROGRAM ###
 
 # SCREEN_X = 1280
@@ -15,6 +12,7 @@ SCREEN_Y = 900
 PIVOT = (SCREEN_X//3, SCREEN_Y//3)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+GRAVITY = 9.81
 
 pygame.init()
 
@@ -99,6 +97,15 @@ reset_button = pygame_gui.elements.UIButton(
     manager=manager
 )
 
+trace1_toggle_button = pygame_gui.elements.UIButton(
+    relative_rect=pygame.Rect((main_ui_rect.w//2 + 10, 50 + len(parameters)*padding_y), (main_ui_rect.w//2 - padding_x - 10, 50)),
+    text="Path 1",
+    container=main_ui_panel,
+    object_id="#trace_toggle_button_active",
+    manager=manager
+)
+
+reset_pendulum = False
 mouse_vel = pygame.mouse.get_rel()
 while running:
     for event in pygame.event.get():
@@ -114,22 +121,26 @@ while running:
         manager.process_events(event)
 
         if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-            ui_object_id = event.ui_object_id.split('.')[1]
+            ui_object_id = event.ui_object_id.split('.')[-1]
             for label, slider_elem, text_line in ui_elements:
-                if ui_object_id == slider_elem.object_ids[1]:
+                if ui_object_id == slider_elem.object_ids[-1]:
                     text_line.set_text(str(event.value))
-            ui_object_id = event.ui_object_id.split('.')[1]
             for param in parameters:
                 param_name = param["name"].lower().replace(' ', '')
                 if ui_object_id.startswith("#"+param_name):
                     setattr(pendulum, param["var_name"], event.value)
 
+        # TODO: cleanup this mess
         if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-            ui_object_id = event.ui_object_id.split('.')[1]
+            ui_object_id = event.ui_object_id.split('.')[-1]
             text_line_value = -1
             for label, slider_elem, text_line in ui_elements:
-                if ui_object_id == text_line.object_ids[1]:
-                    text_line_value = float(text_line.get_text())
+                if ui_object_id == text_line.object_ids[-1]:
+                    if ui_object_id.startswith("#gravity") and text_line.get_text() == 'g':
+                        text_line_value = GRAVITY
+                        text_line.set_text(str(GRAVITY))
+                    else:
+                        text_line_value = float(text_line.get_text())
                     associated_slider = slider_elem
                     associated_slider.set_current_value(text_line_value)
             for param in parameters:
@@ -139,15 +150,27 @@ while running:
 
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            ui_object_id = event.ui_object_id.split('.')[1]
-            if reset_button.object_ids and ui_object_id == reset_button.object_ids[1]:
-                pendulum.reset()
+            ui_object_id = event.ui_object_id.split('.')[-1]
+            if reset_button.object_ids and ui_object_id == reset_button.get_object_ids()[-1]:
+                reset_pendulum = True
+            if trace1_toggle_button.object_ids and ui_object_id == trace1_toggle_button.get_object_ids()[-1]:
+                if trace1_toggle_button.get_object_ids()[-1].endswith("inactive"):
+                    pendulum.hide_trace1 = False
+                    trace1_toggle_button.change_object_id("#trace_toggle_button_active")
+                else:
+                    pendulum.hide_trace1 = True
+                    trace1_toggle_button.change_object_id("#trace_toggle_button_inactive")
 
     manager.update(dt)
 
     screen.fill("black")
 
     pendulum.update_traces(screen)
+
+    if reset_pendulum:
+        pendulum.reset()
+        reset_pendulum = False
+
     for _ in range(10):
         try:
             pendulum.rk4_step()

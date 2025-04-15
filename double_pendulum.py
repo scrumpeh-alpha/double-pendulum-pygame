@@ -62,6 +62,7 @@ class DoublePendulum():
         self.trace_capacity = 100
         self.trace1 = Trace(self.trace_capacity, color=(100, 100, 200))
         self.trace2 = Trace(self.trace_capacity, color=(200, 100, 0))
+        self.hide_trace1 = False
 
     @property
     def r1(self):
@@ -116,11 +117,15 @@ class DoublePendulum():
     def update_traces(self, screen: pygame.Surface) -> None:
         self.trace1.capacity = self.trace_capacity
         self.trace2.capacity = self.trace_capacity
-        self.trace1.add(self.pos1)
+        if not self.hide_trace1:
+            self.trace1.add(self.pos1)
+            self.trace1.update_trace(screen)
         self.trace2.add(self.pos2)
-        self.trace1.update_trace(screen)
         self.trace2.update_trace(screen)
 
+    def clear_traces(self) -> None:
+        self.trace1.clear()
+        self.trace2.clear()
 
     def update(self, screen: pygame.Surface) -> None:
         if self.theta1 > 1e6 or self.theta2 > 1e6:
@@ -176,13 +181,13 @@ class DoublePendulum():
             self.held = 1
             self.omega1 = 0
             self.omega2 = 0
-            self.trace2.clear()
+            self.clear_traces()
         if (self.held != 1 and distance2 < self.r2**2 or self.held == 2):
             self.theta2 = mouse_theta2
             self.held = 2
             self.omega1 = 0
             self.omega2 = 0
-            self.trace2.clear()
+            self.clear_traces()
 
     def on_mouse_up(self, mouse_vel):
         # TODO: set angular velocity according to mouse
@@ -200,6 +205,7 @@ class DoublePendulum():
         self.theta2 = self.initial_angles[1]*np.pi/180
         self.omega1 = 0
         self.omega2 = 0
+        self.clear_traces()
 
         # To reset parameters
         # self.l1 = self.initial_lengths[0]
@@ -207,5 +213,3 @@ class DoublePendulum():
         # self.m1 = self.initial_masses[0]
         # self.m2 = self.initial_masses[1]
 
-        self.trace1.clear()
-        self.trace2.clear()
