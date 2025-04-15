@@ -9,8 +9,7 @@
 
 ### Demonstration 
 
-- TODO: Insert video/gif
-
+![](demo/Double\ Pendulum\ Demonstation.mp4)
 
 ### Installation & Running
 
