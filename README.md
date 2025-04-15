@@ -9,7 +9,7 @@
 
 ### Demonstration 
 
-![](demo/Double\ Pendulum\ Demonstation.mp4)
+![](demo/Double-Pendulum-Demo.mp4)
 
 ### Installation & Running
 
