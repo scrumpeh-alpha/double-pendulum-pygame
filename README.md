@@ -9,7 +9,8 @@
 
 ### Demonstration 
 
-![](demo/Double-Pendulum-Demo.mp4)
+https://github.com/user-attachments/assets/854861fb-b468-4725-8063-c19a85668643
+
 
 ### Installation & Running
 
