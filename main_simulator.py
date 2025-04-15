@@ -3,8 +3,8 @@ import pygame_gui
 import time
 from double_pendulum import DoublePendulum
 
-# TODO: 
-# setattr and getattr for smarter sliders
+# TODO:
+# Add checkbox for enabling trace1
 
 ### MAIN PROGRAM ###
 
@@ -109,7 +109,8 @@ while running:
         if event.type == pygame.MOUSEBUTTONUP:
             pendulum.on_mouse_up(mouse_vel)
 
-        # UI Events #
+        ## UI Events ##
+
         manager.process_events(event)
 
         if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
@@ -157,7 +158,6 @@ while running:
     mouse_vel = pygame.mouse.get_rel()
 
     if pendulum.held > 0:
-        # print(mouse_vel)
         pendulum.on_mouse_down()
 
     manager.update(dt)

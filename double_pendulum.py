@@ -7,12 +7,12 @@ from collections import deque
 
 
 class Trace():
-    def __init__(self, capacity: int):
+    def __init__(self, capacity: int, color: tuple[int, int, int]):
         assert isinstance(capacity, int)
         self.trace_queue = deque()
         self.capacity = capacity
         self.size = 0
-        self.color = (200, 100, 0)
+        self.color = color
 
     def add(self, position: tuple[float, float]) -> None:
         while (self.size >= self.capacity):
@@ -53,13 +53,15 @@ class DoublePendulum():
         # self.dt = 0.16
         self.dt = 0.016
         self.held = 0
-        self.trace_capacity = 100
-        self.trace2 = Trace(self.trace_capacity)
 
         self.pivot = pivot
         self.initial_angles = angles
         self.initial_lengths = lengths
         self.initial_masses = masses
+
+        self.trace_capacity = 100
+        self.trace1 = Trace(self.trace_capacity, color=(100, 100, 200))
+        self.trace2 = Trace(self.trace_capacity, color=(200, 100, 0))
 
     @property
     def r1(self):
@@ -112,8 +114,11 @@ class DoublePendulum():
         self.theta2 %= (2*np.pi)
 
     def update_traces(self, screen: pygame.Surface) -> None:
+        self.trace1.capacity = self.trace_capacity
         self.trace2.capacity = self.trace_capacity
+        self.trace1.add(self.pos1)
         self.trace2.add(self.pos2)
+        self.trace1.update_trace(screen)
         self.trace2.update_trace(screen)
 
 
@@ -202,4 +207,5 @@ class DoublePendulum():
         # self.m1 = self.initial_masses[0]
         # self.m2 = self.initial_masses[1]
 
+        self.trace1.clear()
         self.trace2.clear()
