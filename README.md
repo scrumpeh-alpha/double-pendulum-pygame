@@ -1,4 +1,6 @@
-# Double Pendulum PyGame Sim
+# Double Pendulum PyGame Simulation
+
+Double Pendulum solved using Range-Kutta 4th Order Integration to solve first order differential equations.
 
 - Requirements:
     - `numpy`
