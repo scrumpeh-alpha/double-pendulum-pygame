@@ -3,6 +3,9 @@ import pygame_gui
 import time
 from double_pendulum import DoublePendulum
 
+# TODO:
+# Add toggle for gradient
+
 ### MAIN PROGRAM ###
 
 # SCREEN_X = 1280

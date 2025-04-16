@@ -5,14 +5,20 @@ from numpy.typing import NDArray
 from collections.abc import Callable
 from collections import deque
 
+# TODO:
+# Cannot decide if gradient is needed
 
 class Trace():
-    def __init__(self, capacity: int, color: tuple[int, int, int]):
+    def __init__(self, capacity: int, color: pygame.Color, color_gradient: tuple[pygame.Color, pygame.Color]):
         assert isinstance(capacity, int)
         self.trace_queue = deque()
         self.capacity = capacity
         self.size = 0
         self.color = color
+        self.use_gradient = False
+        self.color_gradient = color_gradient
+        self.radius = 1
+
 
     def add(self, position: tuple[float, float]) -> None:
         while (self.size >= self.capacity):
@@ -23,8 +29,17 @@ class Trace():
 
     def update_trace(self, screen) -> None:
         # For path of circles
-        for pos in self.trace_queue:
-            pygame.draw.circle(screen, self.color, center=pos, radius=1)
+        no_of_points = min(self.size, 1500)
+        delta_frac = 1/no_of_points if no_of_points != 0 else 0
+        frac_iter = 0
+        # Traversing reverse so that all the oldest points will have the last color of the color gradient when maxxed
+        for pos in reversed(self.trace_queue):
+            if self.use_gradient:
+                color = self.color_gradient[0].lerp(self.color_gradient[1], frac_iter)
+            else:
+                color = self.color
+            pygame.draw.circle(screen, color, center=pos, radius=self.radius)
+            frac_iter = min(frac_iter + delta_frac, 1)
 
     def clear(self) -> None:
         self.trace_queue.clear()
@@ -60,8 +75,16 @@ class DoublePendulum():
         self.initial_masses = masses
 
         self.trace_capacity = 100
-        self.trace1 = Trace(self.trace_capacity, color=(100, 100, 200))
-        self.trace2 = Trace(self.trace_capacity, color=(200, 100, 0))
+        self.trace1 = Trace(
+            capacity = self.trace_capacity,
+            color = pygame.Color(100, 100, 200),
+            color_gradient = ( pygame.Color(153, 253, 255), pygame.Color(255, 0, 255) )
+        )
+        self.trace2 = Trace(
+            capacity = self.trace_capacity,
+            color = pygame.Color(200, 100, 0),
+            color_gradient = ( pygame.Color(255, 249, 138), pygame.Color(200, 100, 0))
+        )
         self.hide_trace1 = False
 
     @property
